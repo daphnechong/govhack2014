@@ -39,11 +39,9 @@ path{
 }
 circle{opacity:0.5;}
   </style>
-	<script type="text/javascript" src="js/jquery-2.1.0.min.js"></script>
   <script type="text/javascript" src="js/d3.v3.4.6.js"></script>
 	<script type="text/javascript" src="js/shape-data.json"></script>
   <script src='http://api.tiles.mapbox.com/mapbox.js/v1.3.1/mapbox.js'></script>
-  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js" ></script>
   <link href='http://api.tiles.mapbox.com/mapbox.js/v1.3.1/mapbox.css' rel='stylesheet' />
   <!--[if lte IE 8]>
     <link href='//api.tiles.mapbox.com/mapbox.js/v1.3.1/mapbox.ie.css' rel='stylesheet' >
@@ -60,6 +58,7 @@ L.mapbox.tileLayer('tmcw.map-ajwqaq7t', {
 }).addTo(map);
  
 map.attributionControl.addAttribution('<a href="http://geojson.io/">geojson.io</a>');
+map.attributionControl.addAttribution('<a href="http://tdx.transportnsw.info">Transport for NSW</a>');
 
 var coordinates = [];
 data.forEach(function(row){
@@ -90,7 +89,6 @@ svg.append("circle")
     .attr("rotate", "auto")
     .attr("dur", "10s")
     .attr("fill", "freeze");
-    
 
 </script>
 </body>
