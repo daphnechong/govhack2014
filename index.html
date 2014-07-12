@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no' />
+  <style>
+  body { margin:0; padding:0; }
+  #map { position:absolute; top:0; bottom:0; width:100%; }
+  .marker-properties {
+    border-collapse:collapse;
+    font-size:11px;
+    border:1px solid #eee;
+    margin:0;
+}
+ 
+.marker-properties th {
+    white-space:nowrap;
+    border:1px solid #eee;
+    padding:5px 10px;
+}
+ 
+.marker-properties td {
+    border:1px solid #eee;
+    padding:5px 10px;
+}
+ 
+.marker-properties tr:last-child td,
+.marker-properties tr:last-child th {
+    border-bottom:none;
+}
+ 
+.marker-properties tr:nth-child(even) th,
+.marker-properties tr:nth-child(even) td {
+    background-color:#f7f7f7;
+}
+svg{border: solid gray 1px;}
+path{
+	fill:none;
+	stroke-width:3;
+}
+circle{opacity:0.5;}
+  </style>
+	<script type="text/javascript" src="js/jquery-2.1.0.min.js"></script>
+  <script type="text/javascript" src="js/d3.v3.4.6.js"></script>
+	<script type="text/javascript" src="js/shape-data.json"></script>
+  <script src='http://api.tiles.mapbox.com/mapbox.js/v1.3.1/mapbox.js'></script>
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js" ></script>
+  <link href='http://api.tiles.mapbox.com/mapbox.js/v1.3.1/mapbox.css' rel='stylesheet' />
+  <!--[if lte IE 8]>
+    <link href='//api.tiles.mapbox.com/mapbox.js/v1.3.1/mapbox.ie.css' rel='stylesheet' >
+  <![endif]-->
+</head>
+<body>
+<div id='map'></div>
+<script type='text/javascript'>
+var map = L.mapbox.map('map');
+ 
+L.mapbox.tileLayer('tmcw.map-ajwqaq7t', {
+    retinaVersion: 'tmcw.map-u8vb5w83',
+    detectRetina: true
+}).addTo(map);
+ 
+map.attributionControl.addAttribution('<a href="http://geojson.io/">geojson.io</a>');
+
+var coordinates = [];
+data.forEach(function(row){
+	coordinates.push([row.lon, row.lat])
+});
+
+geojson = {
+	"type": "LineString",
+	"coordinates": coordinates
+}
+
+var styles = {style: { "color": "#ff7800",
+    "weight": 5,
+    "opacity": 0.65}};
+
+var geojsonLayer = L.geoJson(geojson, styles).addTo(map);
+map.fitBounds(geojsonLayer.getBounds());
+
+svg = d3.select("svg.leaflet-zoom-animated");
+pathData = d3.select("path").attr("d");
+
+svg.append("circle")
+    .attr("r", 5)
+    .style("fill", "#7e7e7e")
+    .data([pathData])
+  .append("animateMotion")
+    .attr("path", function(d){return d;})
+    .attr("rotate", "auto")
+    .attr("dur", "10s")
+    .attr("fill", "freeze");
+    
+
+</script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
