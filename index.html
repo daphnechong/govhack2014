@@ -67,17 +67,29 @@ map.attributionControl.addAttribution('<a href="http://tdx.transportnsw.info">Tr
 
 logger("Ingesting JSON...")
 
+var shapes, schedule, remaining = 2;
+
 d3.json('js/shapes.json', function(data) {
+  shapes = data;
+  if (!--remaining) render();
+});
+
+d3.json('js/schedule.json', function(data) {
+  schedule = data;
+  if (!--remaining) render();
+});
+
+function render() {
   logger("Adding geoJSON layers...")
   svg = d3.select("svg.leaflet-zoom-animated");
 
   var p, i = 0, line, pathData,
     routeLayer = L.geoJson().addTo(map);
-  for (p in data) if (i <= 2000) {
+  for (p in shapes) if (i <= 2000) {
     line = routeLayer.addData({
       "name":p,
       "type": "LineString",
-      "coordinates":data[p]
+      "coordinates":shapes[p]
     });
     i++;
   };
@@ -102,10 +114,7 @@ d3.json('js/shapes.json', function(data) {
           .attr("fill", "freeze");
     };
   logger("Done.");
-
-  return;
-
-});
+};
 
 </script>
 
