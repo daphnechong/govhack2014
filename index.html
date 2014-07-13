@@ -84,7 +84,7 @@ function render() {
   svg = d3.select("svg.leaflet-zoom-animated");
 
   var p, i = 0, line, pathData,
-    routeLayer = L.geoJson().addTo(map);
+  routeLayer = L.geoJson().addTo(map);
   for (p in shapes) if (i <= 2000) {
     line = routeLayer.addData({
       "name":p,
@@ -99,20 +99,100 @@ function render() {
     [-33.9600, 151.3094]
   ]);
 
-    svg = d3.select("svg.leaflet-zoom-animated");
-    for (p in routeLayer._layers) {
-      obj = routeLayer._layers[p];
-      var rawSVG = $(obj._path).attr("d");
+
+  svg = d3.select("svg.leaflet-zoom-animated");
+
+  var layers = [];
+
+  for (p in routeLayer._layers) {
+    obj = routeLayer._layers[p];
+    var name = obj.feature.geometry.name;
+    layers[name] = $(obj._path).attr("d");
+  }
+
+   var layout = zt.getMaxLayout(1, 1, 0);
+  PAPER = zt.makePaper(layout);
+  var G = new zGuide();
+  var currTime = 0;
+
+  var tick = function () {
+    var index = currTime / 10;
+    var newRoutes = schedule[index];
+    for(var i = 0; i < newRoutes.length; i++) {
+      var routeName = newRoutes[i][0];
+      var duration = newRoutes[i][1];
+      var r = layers[routeName];
+
       svg.append("svg:circle")
-          .attr("r", 2)
-          .style("fill", "red")
-          .data([rawSVG])
-        .append("animateMotion")
-          .attr("path", function(d){return d;})
-          .attr("rotate", "auto")
-          .attr("dur", "10s")
-          .attr("fill", "freeze");
-    };
+        .attr("r", 2)
+        .style("fill", "red")
+        .data([r])
+      .append("animateMotion")
+        .attr("path", function(d){return d;})
+        .attr("rotate", "auto")
+        .attr("dur", duration + "s")
+    }
+    // console.log(layers[schedule[index]][0][0]);
+
+    // var svg = layers[schedule[index]];
+    // svg.append("svg:circle")
+    //   .attr("r", 2)
+    //   .style("fill", "red")
+    //   .data([rawSVG])
+    // .append("animateMotion")
+    //   .attr("path", function(d){return d;})
+    //   .attr("rotate", "auto")
+    //   .attr("dur", "10s")
+    //   .attr("fill", "freeze");
+
+    // Draw here
+    currTime += 10;
+    if (currTime <= 1440) G.delay(1000, tick);    
+  }
+  G.delay(500,tick);
+  
+
+
+
+
+ //  for (var i =0; i < 10; i++) {
+ // // for (var i =0; i < schedule.length; i++) {
+ //    var tick = schedule[i];
+
+ //    var fire = function(x) {
+ //      return function() {
+ //        var svg = layers[x[0]];
+ //        svg.append("svg:circle")
+ //          .attr("r", 2)
+ //          .style("fill", "red")
+ //          .data([rawSVG])
+ //        .append("animateMotion")
+ //          .attr("path", function(d){return d;})
+ //          .attr("rotate", "auto")
+ //          .attr("dur", "10s")
+ //          .attr("fill", "freeze");
+ //      }
+ //    }
+ //    setTimeout(fire(tick), 10*i);
+ //  }
+
+
+    // for (p in routeLayer._layers) {
+
+    //   obj = routeLayer._layers[p];
+    //   //console.log(obj.feature.geometry.name);
+
+    //   var rawSVG = $(obj._path).attr("d");
+    //   svg.append("svg:circle")
+    //       .attr("r", 2)
+    //       .style("fill", "red")
+    //       .data([rawSVG])
+    //     .append("animateMotion")
+    //       .attr("path", function(d){return d;})
+    //       .attr("rotate", "auto")
+    //       .attr("dur", "10s")
+    //       .attr("fill", "freeze");
+    // };
   logger("Done.");
 };
 
