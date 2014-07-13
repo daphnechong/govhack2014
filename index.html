@@ -11,86 +11,104 @@
     border:1px solid #eee;
     margin:0;
 }
- 
+
 .marker-properties th {
     white-space:nowrap;
     border:1px solid #eee;
     padding:5px 10px;
 }
- 
+
 .marker-properties td {
     border:1px solid #eee;
     padding:5px 10px;
 }
- 
+
 .marker-properties tr:last-child td,
 .marker-properties tr:last-child th {
     border-bottom:none;
 }
- 
+
 .marker-properties tr:nth-child(even) th,
 .marker-properties tr:nth-child(even) td {
     background-color:#f7f7f7;
 }
 svg{border: solid gray 1px;}
 path{
-	fill:none;
-	stroke-width:3;
+  fill:none;
+  stroke-width:3;
+  display:none;
 }
 circle{opacity:0.5;}
   </style>
-  <script type="text/javascript" src="js/d3.v3.4.6.js"></script>
-	<script type="text/javascript" src="js/shape-data.json"></script>
-  <script src='http://api.tiles.mapbox.com/mapbox.js/v1.3.1/mapbox.js'></script>
-  <link href='http://api.tiles.mapbox.com/mapbox.js/v1.3.1/mapbox.css' rel='stylesheet' />
+  <script type="text/javascript" src="./js/jquery-2.1.0.min.js"></script>
+  <script type="text/javascript" src="./js/raphael-min.js"></script>
+  <script type="text/javascript" src="./js/zed.min.js"></script>
+  <script type="text/javascript" src="./js/d3.v3.4.6.js"></script>
+  <script src="http://api.tiles.mapbox.com/mapbox.js/v1.3.1/mapbox.js"></script>
+  <link href="http://api.tiles.mapbox.com/mapbox.js/v1.3.1/mapbox.css" rel="stylesheet" />
+
   <!--[if lte IE 8]>
     <link href='//api.tiles.mapbox.com/mapbox.js/v1.3.1/mapbox.ie.css' rel='stylesheet' >
   <![endif]-->
 </head>
 <body>
 <div id='map'></div>
+<div id="Raphael"></div>
 <script type='text/javascript'>
 var map = L.mapbox.map('map');
- 
+
 L.mapbox.tileLayer('tmcw.map-ajwqaq7t', {
     retinaVersion: 'tmcw.map-u8vb5w83',
     detectRetina: true
 }).addTo(map);
- 
+
 map.attributionControl.addAttribution('<a href="http://geojson.io/">geojson.io</a>');
 map.attributionControl.addAttribution('<a href="http://tdx.transportnsw.info">Transport for NSW</a>');
 
-var coordinates = [];
-data.forEach(function(row){
-	coordinates.push([row.lon, row.lat])
+logger("Ingesting JSON...")
+
+d3.json('js/shapes.json', function(data) {
+  logger("Adding geoJSON layers...")
+  svg = d3.select("svg.leaflet-zoom-animated");
+
+  var p, i = 0, line, pathData,
+    routeLayer = L.geoJson().addTo(map);
+  for (p in data) if (i <= 2000) {
+    line = routeLayer.addData({
+      "name":p,
+      "type": "LineString",
+      "coordinates":data[p]
+    });
+    i++;
+  };
+
+  map.fitBounds([
+    [-33.7600, 151.1094],
+    [-33.9600, 151.3094]
+  ]);
+
+    svg = d3.select("svg.leaflet-zoom-animated");
+    for (p in routeLayer._layers) {
+      obj = routeLayer._layers[p];
+      var rawSVG = $(obj._path).attr("d");
+      svg.append("svg:circle")
+          .attr("r", 2)
+          .style("fill", "red")
+          .data([rawSVG])
+        .append("animateMotion")
+          .attr("path", function(d){return d;})
+          .attr("rotate", "auto")
+          .attr("dur", "10s")
+          .attr("fill", "freeze");
+    };
+  logger("Done.");
+
+  return;
+
 });
 
-geojson = {
-	"type": "LineString",
-	"coordinates": coordinates
-}
-
-var styles = {style: { "color": "#ff7800",
-    "weight": 5,
-    "opacity": 0.65}};
-
-var geojsonLayer = L.geoJson(geojson, styles).addTo(map);
-map.fitBounds(geojsonLayer.getBounds());
-
-svg = d3.select("svg.leaflet-zoom-animated");
-pathData = d3.select("path").attr("d");
-
-svg.append("circle")
-    .attr("r", 5)
-    .style("fill", "#7e7e7e")
-    .data([pathData])
-  .append("animateMotion")
-    .attr("path", function(d){return d;})
-    .attr("rotate", "auto")
-    .attr("dur", "10s")
-    .attr("fill", "freeze");
-
 </script>
+
 </body>
 </html>
 
