@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no' />
+  <style>
+  body { margin:0; padding:0; }
+  #map { position:absolute; top:0; bottom:0; width:100%; }
+  .marker-properties {
+    border-collapse:collapse;
+    font-size:11px;
+    border:1px solid #eee;
+    margin:0;
+}
+
+.marker-properties th {
+    white-space:nowrap;
+    border:1px solid #eee;
+    padding:5px 10px;
+}
+
+.marker-properties td {
+    border:1px solid #eee;
+    padding:5px 10px;
+}
+
+.marker-properties tr:last-child td,
+.marker-properties tr:last-child th {
+    border-bottom:none;
+}
+
+.marker-properties tr:nth-child(even) th,
+.marker-properties tr:nth-child(even) td {
+    background-color:#f7f7f7;
+}
+svg{border: solid gray 1px;}
+path{
+  fill:none;
+  stroke-width:3;
+  display:none;
+}
+circle{opacity:0.5;}
+  </style>
+  <script type="text/javascript" src="./js/jquery-2.1.0.min.js"></script>
+  <script type="text/javascript" src="./js/raphael-min.js"></script>
+  <script type="text/javascript" src="./js/zed.min.js"></script>
+  <script type="text/javascript" src="./js/d3.v3.4.6.js"></script>
+  <script src="http://api.tiles.mapbox.com/mapbox.js/v1.3.1/mapbox.js"></script>
+  <link href="http://api.tiles.mapbox.com/mapbox.js/v1.3.1/mapbox.css" rel="stylesheet" />
+
+  <!--[if lte IE 8]>
+    <link href='//api.tiles.mapbox.com/mapbox.js/v1.3.1/mapbox.ie.css' rel='stylesheet' >
+  <![endif]-->
+</head>
+<body>
+<div id='map'></div>
+<div id="Raphael"></div>
+<script type='text/javascript'>
+var map = L.mapbox.map('map');
+
+L.mapbox.tileLayer('tmcw.map-ajwqaq7t', {
+    retinaVersion: 'tmcw.map-u8vb5w83',
+    detectRetina: true
+}).addTo(map);
+
+map.attributionControl.addAttribution('<a href="http://geojson.io/">geojson.io</a>');
+map.attributionControl.addAttribution('<a href="http://tdx.transportnsw.info">Transport for NSW</a>');
+
+logger("Ingesting JSON...")
+
+var shapes, schedule, remaining = 2;
+
+d3.json('js/shapes.json', function(data) {
+  shapes = data;
+  if (!--remaining) render();
+});
+
+d3.json('js/schedule.json', function(data) {
+  schedule = data;
+  if (!--remaining) render();
+});
+
+function render() {
+  logger("Adding geoJSON layers...")
+  svg = d3.select("svg.leaflet-zoom-animated");
+
+  var p, i = 0, line, pathData,
+  routeLayer = L.geoJson().addTo(map);
+  for (p in shapes) if (i <= 2000) {
+    line = routeLayer.addData({
+      "name":p,
+      "type": "LineString",
+      "coordinates":shapes[p]
+    });
+    i++;
+  };
+
+  map.fitBounds([
+    [-33.7600, 151.1094],
+    [-33.9600, 151.3094]
+  ]);
+
+
+  svg = d3.select("svg.leaflet-zoom-animated");
+
+  var layers = [];
+
+  for (p in routeLayer._layers) {
+    obj = routeLayer._layers[p];
+    var name = obj.feature.geometry.name;
+    layers[name] = $(obj._path).attr("d");
+  }
+
+   var layout = zt.getMaxLayout(1, 1, 0);
+  PAPER = zt.makePaper(layout);
+  var G = new zGuide();
+  var currTime = 0;
+
+  var tick = function () {
+    var index = currTime / 10;
+    var newRoutes = schedule[index];
+    for(var i = 0; i < newRoutes.length; i++) {
+      var routeName = newRoutes[i][0];
+      var duration = newRoutes[i][1];
+      var r = layers[routeName];
+
+      svg.append("svg:circle")
+        .attr("r", 2)
+        .style("fill", "red")
+        .data([r])
+      .append("animateMotion")
+        .attr("path", function(d){return d;})
+        .attr("rotate", "auto")
+        .attr("dur", duration + "s")
+    }
+    // console.log(layers[schedule[index]][0][0]);
+
+    // var svg = layers[schedule[index]];
+    // svg.append("svg:circle")
+    //   .attr("r", 2)
+    //   .style("fill", "red")
+    //   .data([rawSVG])
+    // .append("animateMotion")
+    //   .attr("path", function(d){return d;})
+    //   .attr("rotate", "auto")
+    //   .attr("dur", "10s")
+    //   .attr("fill", "freeze");
+
+    // Draw here
+    currTime += 10;
+    if (currTime <= 1440) G.delay(1000, tick);    
+  }
+  G.delay(500,tick);
+  
+
+
+
+
+ //  for (var i =0; i < 10; i++) {
+ // // for (var i =0; i < schedule.length; i++) {
+ //    var tick = schedule[i];
+
+ //    var fire = function(x) {
+ //      return function() {
+ //        var svg = layers[x[0]];
+ //        svg.append("svg:circle")
+ //          .attr("r", 2)
+ //          .style("fill", "red")
+ //          .data([rawSVG])
+ //        .append("animateMotion")
+ //          .attr("path", function(d){return d;})
+ //          .attr("rotate", "auto")
+ //          .attr("dur", "10s")
+ //          .attr("fill", "freeze");
+ //      }
+ //    }
+ //    setTimeout(fire(tick), 10*i);
+ //  }
+
+
+    // for (p in routeLayer._layers) {
+
+    //   obj = routeLayer._layers[p];
+    //   //console.log(obj.feature.geometry.name);
+
+    //   var rawSVG = $(obj._path).attr("d");
+    //   svg.append("svg:circle")
+    //       .attr("r", 2)
+    //       .style("fill", "red")
+    //       .data([rawSVG])
+    //     .append("animateMotion")
+    //       .attr("path", function(d){return d;})
+    //       .attr("rotate", "auto")
+    //       .attr("dur", "10s")
+    //       .attr("fill", "freeze");
+    // };
+  logger("Done.");
+};
+
+</script>
+
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
